@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Market Research Agent - Free Business Insights</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 1000px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 4px solid #7e22ce;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            opacity: 0.95;
+            font-size: 1em;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-top: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            background: #f8fafc;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6em;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .message.assistant .avatar {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .message.user .avatar {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .message-content {
+            flex: 1;
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            max-width: 75%;
+            line-height: 1.8;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 2px solid #3b82f6;
+        }
+
+        .message-text {
+            color: #1f2937;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* Format AI responses with proper spacing */
+        .message-text h3 {
+            color: #1e3c72;
+            font-size: 1.3em;
+            margin: 20px 0 12px 0;
+            font-weight: 700;
+            border-left: 4px solid #7e22ce;
+            padding-left: 12px;
+        }
+
+        .message-text h4 {
+            color: #2a5298;
+            font-size: 1.1em;
+            margin: 16px 0 10px 0;
+            font-weight: 600;
+        }
+
+        .message-text p {
+            margin: 12px 0;
+            line-height: 1.8;
+        }
+
+        .message-text ul, .message-text ol {
+            margin: 12px 0 12px 24px;
+            line-height: 1.9;
+        }
+
+        .message-text li {
+            margin: 8px 0;
+            padding-left: 8px;
+        }
+
+        .message-text strong {
+            color: #1e3c72;
+            font-weight: 700;
+        }
+
+        .message-text em {
+            background: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-style: normal;
+        }
+
+        .message-time {
+            font-size: 0.8em;
+            color: #6b7280;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .typing {
+            display: inline-flex;
+            gap: 6px;
+            padding: 12px;
+        }
+
+        .typing span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #3b82f6;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing span:nth-child(1) { animation-delay: -0.32s; }
+        .typing span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .quick-prompts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .quick-btn {
+            padding: 14px 18px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.95em;
+            transition: all 0.3s;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .quick-btn:hover {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+
+        .input-area {
+            padding: 25px;
+            background: white;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 14px;
+            font-family: inherit;
+            font-size: 1em;
+            resize: none;
+            transition: all 0.3s;
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        button {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        button:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            background: #f8fafc;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.85em;
+            color: #6b7280;
+        }
+
+        /* Scrollbar styling */
+        .messages::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .messages::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 10px;
+        }
+
+        .messages::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .container {
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .message-content {
+                max-width: 85%;
+                padding: 16px;
+            }
+
+            .quick-prompts {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AI Market Research Agent</h1>
+            <p>Professional Business Intelligence & Market Insights</p>
+            <div class="badge">✨ Powered by Advanced AI</div>
+        </div>
+
+        <div class="messages" id="messages">
+            <div class="message assistant">
+                <div class="avatar">🤖</div>
+                <div class="message-content">
+                    <div class="message-text">
+                        <strong>Welcome to your AI Business Consultant!</strong>
+                        <p>I provide professional market research, competitive analysis, and business strategy insights. Ask me about:</p>
+                        <ul>
+                            <li>📊 Market trends and opportunities</li>
+                            <li>🎯 Business ideas for any location or budget</li>
+                            <li>💼 Competitive intelligence and strategy</li>
+                            <li>📈 Industry analysis and forecasts</li>
+                        </ul>
+                        <p>What would you like to explore today?</p>
+                    </div>
+                    <div class="message-time">⏰ Just now</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-group">
+                <textarea 
+                    id="userInput" 
+                    placeholder="Ask about market opportunities, business ideas, trends..."
+                    rows="2"
+                    onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }"
+                ></textarea>
+                <button onclick="sendMessage()" id="sendBtn">
+                    💬 Send
+                </button>
+            </div>
+            <div class="quick-prompts" id="quickPrompts">
+                <button class="quick-btn" onclick="setInput('Best business ideas in [my city] with low budget')">💡 Business ideas for my city</button>
+                <button class="quick-btn" onclick="setInput('What are the latest market trends in [industry]?')">📈 Market trends analysis</button>
+                <button class="quick-btn" onclick="setInput('Competitive analysis for [business type]')">🎯 Competitive intelligence</button>
+                <button class="quick-btn" onclick="setInput('Growth opportunities in [sector]')">🚀 Growth opportunities</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            🔒 Free & Secure • No Login Required • Professional Business Insights
+        </div>
+    </div>
+
+    <script>
+        const GROQ_API_KEY = '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';
+        const conversationHistory = [];
+
+        function formatAIResponse(text) {
+            // Format bold text with **
+            text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            
+            // Format numbered lists (1., 2., etc.)
+            text = text.replace(/(\d+)\.\s+\*\*(.+?)\*\*:/g, '<h4>$1. $2</h4>');
+            
+            // Format main headers
+            text = text.replace(/\*\*([A-Z][^*]+?):\*\*/g, '<h3>$1</h3>');
+            
+            // Format bullet points
+            text = text.replace(/•/g, '⭐');
+            
+            // Add proper spacing around sections
+            text = text.replace(/\n\n/g, '</p><p>');
+            text = text.replace(/\n/g, '<br>');
+            
+            // Wrap in paragraph tags
+            if (!text.startsWith('<h') && !text.startsWith('<p>')) {
+                text = '<p>' + text + '</p>';
+            }
+            
+            return text;
+        }
+
+        function addMessage(role, content) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const formattedContent = role === 'assistant' ? formatAIResponse(content) : content;
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="avatar">${role === 'user' ? '👤' : '🤖'}</div>
+                <div class="message-content">
+                    <div class="message-text">${formattedContent}</div>
+                    <div class="message-time">⏰ ${time}</div>
+                </div>
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showTyping() {
+            const messagesDiv = document.getElementById('messages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing';
+            typingDiv.className = 'message assistant';
+            typingDiv.innerHTML = `
+                <div class="avatar">🤖</div>
+                <div class="message-content">
+                    <div class="typing"><span></span><span></span><span></span></div>
+                </div>
+            `;
+            messagesDiv.appendChild(typingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function hideTyping() {
+            const typing = document.getElementById('typing');
+            if (typing) typing.remove();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Add user message
+            addMessage('user', message);
+            conversationHistory.push({ role: 'user', content: message });
+            
+            // Clear input and disable button
+            input.value = '';
+            sendBtn.disabled = true;
+            showTyping();
+
+            // Hide quick prompts after first message
+            document.getElementById('quickPrompts').style.display = 'none';
+
+            try {
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${GROQ_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'llama-3.3-70b-versatile',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: `You are a professional Market Research and Business Strategy Expert. Provide clear, well-structured, and actionable insights.
+
+FORMAT YOUR RESPONSES WITH:
+- Clear section headers using **Header:**
+- Numbered lists for main points (1. **Point Name**: Description)
+- Bullet points for sub-points
+- Proper spacing between sections
+- Professional and encouraging tone
+- Specific, actionable recommendations
+
+Focus on:
+- Market analysis and opportunities
+- Competitive intelligence
+- Business strategy and planning
+- Industry trends and insights
+- Practical, budget-conscious advice`
+                            },
+                            ...conversationHistory
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 2500
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const assistantMessage = data.choices[0].message.content;
+                
+                hideTyping();
+                addMessage('assistant', assistantMessage);
+                conversationHistory.push({ role: 'assistant', content: assistantMessage });
+
+            } catch (error) {
+                hideTyping();
+                console.error('Error:', error);
+                addMessage('assistant', '<p><strong>⚠️ Sorry, I encountered a temporary issue.</strong></p><p>This could be due to high demand. Please try again in a moment!</p>');
+                conversationHistory.pop();
+            } finally {
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        function setInput(text) {
+            document.getElementById('userInput').value = text;
+            document.getElementById('userInput').focus();
+        }
+
+        // Focus input on load
+        document.getElementById('userInput').focus();
+    </script>
+</body>
+</html>
